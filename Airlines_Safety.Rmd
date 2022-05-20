@@ -1,0 +1,269 @@
+---
+title: "Arilines Safety"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<h4>Should Travelers Avoid Flying Airlines That Have Had Crashes in the Past?</h4>
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(cowplot)
+library(RColorBrewer)
+library(gplots)
+library(reshape)
+```
+
+```{r}
+#Reading data
+a_s_data <- read.csv("/Users/anush/Desktop/MSc DSA /SEM 2/TOPICS IN DATA ANALYTICS/Project/airline-safety.csv",header = TRUE)
+a_s_d<-a_s_data
+head(a_s_d)
+dim(a_s_d)
+names(a_s_d)
+```
+
+```{r}
+str(a_s_d)
+```
+
+```{r}
+#checking for NA
+sum(is.na(a_s_d))
+```
+
+
+```{r}
+# Function to add correlation coefficients
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...) {
+    usr <- par("usr")
+    on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    Cor <- abs(cor(x, y))
+    txt <- paste0(prefix, format(c(Cor, 0.123456789), digits = digits)[1])
+    if(missing(cex.cor)) {
+        cex.cor <- 0.4 / strwidth(txt)
+    }
+    text(0.5, 0.5, txt,
+         cex = 1 + cex.cor * Cor) 
+}
+
+# Plotting the correlation matrix
+plot(a_s_d[,2:ncol(a_s_d)],
+      upper.panel = panel.cor,  
+      lower.panel = panel.smooth) 
+```
+
+```{r}
+a_s_d_85to99<-a_s_d%>% select(airline,incidents_85_99,fatal_accidents_85_99,fatalities_85_99)%>% arrange(desc(fatal_accidents_85_99))
+
+a_s_d_85to99_pivot <- tidyr::pivot_longer(a_s_d_85to99[1:10,], cols=c('incidents_85_99','fatal_accidents_85_99','fatalities_85_99'), names_to='From85to99', values_to="count")
+
+plot1<-ggplot(a_s_d_85to99_pivot, aes(x=airline, y=count, fill=From85to99)) +
+   geom_bar(stat='identity', position='dodge')+
+   ggtitle("From 1985 to 1999")+ xlab('Airlines') + ylab('Number of cases')+
+   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text( angle=60,hjust = 1)) +
+  theme(legend.position="none")
+plot1
+```
+
+```{r}
+a_s_d_00to14<-a_s_d%>% select(airline,incidents_00_14,fatal_accidents_00_14,fatalities_00_14)%>% arrange(desc(fatal_accidents_00_14))
+
+a_s_d_00to14_pivot <- tidyr::pivot_longer(a_s_d_00to14[1:10,], cols=c('incidents_00_14','fatal_accidents_00_14','fatalities_00_14'), names_to='From00to14', values_to="count")
+
+plot2<-ggplot(a_s_d_00to14_pivot, aes(x=airline, y=count, fill=From00to14)) +
+   geom_bar(stat='identity', position='dodge')+
+   ggtitle("From 2000 to 2014")+ xlab('Airlines') + ylab('Number of cases')+
+   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text( angle=60,hjust = 1)) +
+  theme(legend.position="none")
+
+plot2
+```
+
+```{r}
+plot3 <- ggplot(data = a_s_d_85to99_pivot) +
+  geom_col(mapping =aes(x=airline, y = count, fill =From85to99),position = "fill") + 
+  ggtitle('')+ ylab("Proportion of Cases")+xlab("Airlines")+labs(fill = 'From 1985 to 1999') +theme(plot.title = element_text(hjust = 0.5))+coord_flip()
+plot3
+```
+
+```{r}
+plot4 <- ggplot(data = a_s_d_00to14_pivot) +
+  geom_col(mapping =aes(x=airline, y = count, fill =From00to14),position = "fill") + 
+  ggtitle('')+ ylab("Proportion of Cases")+xlab("Airlines")+labs(fill = 'From 2000 to 2014') +theme(plot.title = element_text(hjust = 0.5))+coord_flip()
+plot4
+```
+
+
+For Incidents
+
+```{r}
+Incidents<-a_s_d%>% select(airline,incidents_85_99,incidents_00_14)
+Incidents_pivot <- tidyr::pivot_longer(Incidents, cols=c('incidents_85_99','incidents_00_14'), names_to='Incidents', values_to="count")
+
+
+#For 85_99
+#Max
+Incidents%>%select(airline,incidents_85_99)%>% filter(incidents_85_99==max(incidents_85_99))
+#Min
+Incidents%>%select(airline,incidents_85_99)%>% filter(incidents_85_99==min(incidents_85_99))
+
+#For 00_14
+#Max
+Incidents%>%select(airline,incidents_00_14)%>% filter(incidents_00_14==max(incidents_00_14))
+#Min
+Incidents%>%select(airline,incidents_00_14)%>% filter(incidents_00_14==min(incidents_00_14))
+```
+
+```{r}
+plot5<-ggplot(Incidents_pivot, aes(x=airline, y=count, fill=Incidents)) +
+   geom_bar(stat='identity', position='dodge')+
+   ggtitle("Incidents")+ xlab('Airlines') + ylab('Number of Incidents')+
+   theme(plot.title = element_text(hjust = 0.5))+coord_flip()
+plot5
+```
+
+For Fatal Accidents
+
+```{r}
+Fatal_Accidents<-a_s_d%>% select(airline,fatal_accidents_85_99,fatal_accidents_00_14)
+Fatal_Accidents_pivot <- tidyr::pivot_longer(Fatal_Accidents, cols=c('fatal_accidents_85_99','fatal_accidents_00_14'), names_to='Fatal_Accidents', values_to="count")
+
+#For 85_99
+#Max
+Fatal_Accidents%>%select(airline,fatal_accidents_85_99)%>% filter(fatal_accidents_85_99==max(fatal_accidents_85_99))
+#Min
+Fatal_Accidents%>%select(airline,fatal_accidents_85_99)%>% filter(fatal_accidents_85_99==min(fatal_accidents_85_99))
+
+#For 00_14
+#Max
+Fatal_Accidents%>%select(airline,fatal_accidents_00_14)%>% filter(fatal_accidents_00_14==max(fatal_accidents_00_14))
+#Min
+Fatal_Accidents%>%select(airline,fatal_accidents_00_14)%>% filter(fatal_accidents_00_14==min(fatal_accidents_00_14))
+```
+
+```{r}
+plot6<-ggplot(Fatal_Accidents_pivot, aes(x=airline, y=count, fill=Fatal_Accidents)) +
+   geom_bar(stat='identity', position='dodge')+
+   ggtitle("Fatal_Accidents")+ xlab('Airlines') + ylab('Number of Fatal Accidents')+
+      theme(plot.title = element_text(hjust = 0.5))+coord_flip()
+
+plot6
+```
+
+For Fatalities
+
+```{r}
+Fatalities<-a_s_d%>% select(airline,fatalities_85_99,fatalities_00_14)
+Fatalities_pivot <- tidyr::pivot_longer(Fatalities, cols=c('fatalities_85_99','fatalities_00_14'), names_to='Fatalities', values_to="count")
+
+#For 85_99
+#Max
+Fatalities%>%select(airline,fatalities_85_99)%>% filter(fatalities_85_99==max(fatalities_85_99))
+#Min
+Fatalities%>%select(airline,fatalities_85_99)%>% filter(fatalities_85_99==min(fatalities_85_99))
+
+#For 00_14
+#Max
+Fatalities%>%select(airline,fatalities_00_14)%>% filter(fatalities_00_14==max(fatalities_00_14))
+#Min
+Fatalities%>%select(airline,fatalities_00_14)%>% filter(fatalities_00_14==min(fatalities_00_14))
+
+```
+
+```{r}
+plot7<-ggplot(Fatalities_pivot, aes(x=airline, y=count, fill=Fatalities)) +
+   geom_bar(stat='identity', position='dodge')+
+   ggtitle("Fatalities")+ xlab('Airlines') + ylab('Number of Fatalities')+
+      theme(plot.title = element_text(hjust = 0.5))+coord_flip()
+
+plot7
+```
+
+```{r}
+a_s_d_score<-a_s_d
+
+#From 85 to 99
+
+#step-1
+a_s_d_score$sinci8599<-(mean(a_s_d_score$incidents_85_99)+mean(a_s_d_score$incidents_00_14))-a_s_d_score$incidents_85_99
+a_s_d_score$sfatacc8599<-(mean(a_s_d_score$fatal_accidents_85_99)+mean(a_s_d_score$fatal_accidents_00_14))-a_s_d_score$fatal_accidents_85_99
+a_s_d_score$sfat8599<-(mean(a_s_d_score$fatalities_85_99)+mean(a_s_d_score$fatalities_00_14))-a_s_d_score$fatalities_85_99
+
+#step-2
+ask<-a_s_d_score$avail_seat_km_per_week*52*15
+a_s_d_score$sqrtask<-sqrt(ask)
+a_s_d_score$sinci8599<-a_s_d_score$sqrtask*a_s_d_score$sinci8599
+a_s_d_score$sfatacc8599<-a_s_d_score$sqrtask*a_s_d_score$sfatacc8599
+a_s_d_score$sfat8599<-a_s_d_score$sqrtask*a_s_d_score$sfat8599
+
+#step-3
+
+#a_s_d_score$sinci8599<-(a_s_d_score$sinci8599-mean(a_s_d_score$sinci8599))/sd(a_s_d_score$sinci8599)
+#a_s_d_score$sfatacc8599<-(a_s_d_score$sfatacc8599-mean(a_s_d_score$sfatacc8599))/sd(a_s_d_score$sfatacc8599)
+#a_s_d_score$sfat8599<-(a_s_d_score$sfat8599-mean(a_s_d_score$sfat8599))/sd(a_s_d_score$sfat8599)
+
+a_s_d_score$sinci8599<-scale(a_s_d_score$sinci8599)
+a_s_d_score$sfatacc8599<-scale(a_s_d_score$sfatacc8599)
+a_s_d_score$sfat8599<-scale(a_s_d_score$sfat8599)
+
+a_s_d_score$Safety_Score_85_99<-(a_s_d_score$sinci8599+a_s_d_score$sfatacc8599+a_s_d_score$sfat8599)/3
+
+```
+
+```{r}
+#From 00 to 14
+
+#step-1
+a_s_d_score$sinci0014<-(mean(a_s_d_score$incidents_85_99)+mean(a_s_d_score$incidents_00_14))-a_s_d_score$incidents_00_14
+a_s_d_score$sfatacc0014<-(mean(a_s_d_score$fatal_accidents_85_99)+mean(a_s_d_score$fatal_accidents_00_14))-a_s_d_score$fatal_accidents_00_14
+a_s_d_score$sfat0014<-(mean(a_s_d_score$fatalities_85_99)+mean(a_s_d_score$fatalities_00_14))-a_s_d_score$fatalities_00_14
+
+#step-2
+a_s_d_score$sinci0014<-a_s_d_score$sqrtask*a_s_d_score$sinci0014
+a_s_d_score$sfatacc0014<-a_s_d_score$sqrtask*a_s_d_score$sfatacc0014
+a_s_d_score$sfat0014<-a_s_d_score$sqrtask*a_s_d_score$sfat0014
+
+#step-3
+
+#a_s_d_score$sinci0014<-(a_s_d_score$sinci0014-mean(a_s_d_score$sinci0014))/sd(a_s_d_score$sinci0014)
+#a_s_d_score$sfatacc0014<-(a_s_d_score$sfatacc0014-mean(a_s_d_score$sfatacc0014))/sd(a_s_d_score$sfatacc0014)
+#a_s_d_score$sfat0014<-(a_s_d_score$sfat0014-mean(a_s_d_score$sfat0014))/sd(a_s_d_score$sfat0014)
+
+a_s_d_score$sinci0014<-scale(a_s_d_score$sinci0014)
+a_s_d_score$sfatacc0014<-scale(a_s_d_score$sfatacc0014)
+a_s_d_score$sfat0014<-scale(a_s_d_score$sfat0014)
+
+a_s_d_score$Safety_Score_00_14<-(a_s_d_score$sinci0014+a_s_d_score$sfatacc0014+a_s_d_score$sfat0014)/3
+```
+
+```{r}
+#Final score
+a_s_d_score$Final_Safety_Score<-(a_s_d_score$Safety_Score_85_99 + a_s_d_score$Safety_Score_00_14)/2
+```
+
+```{r}
+Safety_airline<-a_s_d_score%>%select(airline,Safety_Score_85_99,Safety_Score_00_14,Final_Safety_Score)
+Safety_airline
+```
+
+```{r}
+rnames <- Safety_airline[,1]
+hmd <- data.matrix(Safety_airline[,2:ncol(Safety_airline)])
+rownames(hmd) <- rnames
+
+heatmapdata <- melt(hmd)
+colnames(heatmapdata) <- c("x", "y", "value")
+
+ggplot(heatmapdata, aes(x = x, y = y, fill = value)) +
+  geom_tile(color = "black") +
+  scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
+  coord_fixed()+coord_flip()+guides(fill = guide_colourbar(title = "Safety Score"))+geom_text(aes(label = value), color = "black", size = 2)
+```
